@@ -1,7 +1,14 @@
 package berlin.reiche.jtriple;
 
-import java.lang.reflect.Field;
+import static berlin.reiche.jtriple.converter.Converter.Priority.MEDIUM;
 
+import java.lang.reflect.Field;
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.PriorityQueue;
+
+import berlin.reiche.jtriple.converter.Converter;
+import berlin.reiche.jtriple.converter.SimpleConverter;
 import berlin.reiche.jtriple.rdf.Id;
 
 import com.hp.hpl.jena.rdf.model.Model;
@@ -28,6 +35,11 @@ public class Binding {
     private final String namespace;
 
     /**
+     * Different converters specialized to convert certain types.
+     */
+    private final PriorityQueue<Converter> converters;
+
+    /**
      * Initializes a new binding by creating a RDF model with default
      * specification and Standard reification style.
      * 
@@ -37,19 +49,8 @@ public class Binding {
     public Binding(String namespace) {
         this.model = ModelFactory.createDefaultModel();
         this.namespace = namespace;
-    }
-
-    /**
-     * Initializes a new binding by using a given model.
-     * 
-     * @param model
-     *            the model on which the binding will be performed.
-     * @param namespace
-     *            the default namespace to be used for the resources.
-     */
-    public Binding(Model model, String namespace) {
-        this.model = model;
-        this.namespace = namespace;
+        this.converters = new PriorityQueue<>();
+        this.converters.add(new SimpleConverter(MEDIUM.value(), model, namespace));
     }
 
     /**
@@ -65,19 +66,66 @@ public class Binding {
 
         Class<?> cls = object.getClass();
         String name = cls.getSimpleName();
-        String id = null;
+        String id = getId(object).toString();
 
-        for (Field field : Util.getAllFields(cls)) {
+        Resource resource = model.createResource(namespace + name + "/" + id);
+        resource.addProperty(RDF.type, namespace + name);
+
+        Deque<Field> fields = new ArrayDeque<>(Util.getAllFields(cls));
+        Field field = null;
+        while ((field = fields.pollFirst()) != null) {
+            field.setAccessible(true);
+            Object instance = field.get(object);
+            field.setAccessible(false);
+            
+            Class<?> type = field.getType();
+            Converter converter = determineConverter(type);            
+            converter.convert(resource, field, instance);
+        }
+
+    }
+
+    /**
+     * In order to convert the field with the appropriate converter the given
+     * class is checked against the available converter.
+     * 
+     * @return the corresponding converter for the given class.
+     */
+    private Converter determineConverter(Class<?> cls) {
+
+        for (Converter converter : converters) {
+            if (converter.canConvert(cls)) {
+                return converter;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Retrieves the id of an object in order to construct an URI for the
+     * resource.
+     * 
+     * @param object
+     *            the object for which the id is requested.
+     * @return the id.
+     * @throws IllegalAccessException
+     * @throws IllegalArgumentException
+     */
+    public Object getId(Object object) throws IllegalArgumentException,
+            IllegalAccessException {
+
+        Object id = null;
+        for (Field field : Util.getAllFields(object.getClass())) {
+
             if (field.isAnnotationPresent(Id.class)) {
                 field.setAccessible(true);
-                id = field.get(object).toString();
+                id = field.get(object);
                 field.setAccessible(false);
                 break;
             }
         }
-
-        Resource resource = model.createResource(namespace + name + "/" + id);
-        resource.addProperty(RDF.type, namespace + name);
+        return id;
     }
 
     public Model getModel() {
