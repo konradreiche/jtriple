@@ -1,5 +1,7 @@
 package berlin.reiche.jtriple.converter;
 
+import berlin.reiche.jtriple.Binding;
+
 /**
  * Provides an initial implementation of the {@link Converter} interface by
  * providing constructor and {@link Comparable} implementation in order to
@@ -15,14 +17,17 @@ abstract class AbstractConverter implements Converter {
      */
     private final int priority;
 
+    Binding binding;
+
     /**
      * Default constructor.
      * 
      * @param priority
      *            the priority for this converter.
      */
-    public AbstractConverter(int priority) {
+    public AbstractConverter(int priority, Binding binding) {
         this.priority = priority;
+        this.binding = binding;
     }
 
     /**

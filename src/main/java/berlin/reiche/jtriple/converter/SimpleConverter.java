@@ -6,10 +6,10 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
+import berlin.reiche.jtriple.Binding;
 import berlin.reiche.jtriple.rdf.Id;
 import berlin.reiche.jtriple.rdf.RdfProperty;
 
-import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.Property;
 import com.hp.hpl.jena.rdf.model.Resource;
 
@@ -28,31 +28,14 @@ public class SimpleConverter extends AbstractConverter {
     private final Set<Class<?>> simpleTypes;
 
     /**
-     * The Apache Jena RDF model.
-     */
-    private final Model model;
-
-    /**
-     * The default namespace.
-     */
-    private final String namespace;
-
-    /**
      * Default constructor that also adds all supported simple types to a set
      * for subsequent checks.
      * 
      * @param priority
      *            the priority of this converter.
-     * @param model
-     *            the Apache Jena RDF model.
-     * @param namespace
-     *            the default namespace.
      */
-    public SimpleConverter(int priority, Model model, String namespace) {
-        super(priority);
-        this.model = model;
-        this.namespace = namespace;
-
+    public SimpleConverter(int priority, Binding binding) {
+        super(priority, binding);
         simpleTypes = new HashSet<>();
         simpleTypes.add(BigDecimal.class);
         simpleTypes.add(Boolean.class);
@@ -66,23 +49,23 @@ public class SimpleConverter extends AbstractConverter {
      * Simply creates a property out of the field and creates the triple out of
      * the given parent resource, the property and the field value as literal.
      * 
-     * @see berlin.reiche.jtriple.converter.Converter#convert(com.hp.hpl.jena.rdf.model.Resource,
+     * @see berlin.reiche.jtriple.converter.Converter#convertField(com.hp.hpl.jena.rdf.model.Resource,
      *      java.lang.reflect.Field, java.lang.Object)
      */
     @Override
-    public void convert(Resource resource, Field field, Object object) {
+    public void convertField(Resource resource, Field field, Object object) {
 
         if (field.isAnnotationPresent(Id.class)) {
             return;
         }
-        
+
         String name = field.getName();
-        String uri = namespace + name;
+        String uri = binding.getNamespace() + name;
         if (field.isAnnotationPresent(RdfProperty.class)) {
             uri = field.getAnnotation(RdfProperty.class).value();
         }
 
-        Property property = model.createProperty(uri);
+        Property property = binding.getModel().createProperty(uri);
         resource.addProperty(property, object.toString());
     }
 
@@ -94,7 +77,7 @@ public class SimpleConverter extends AbstractConverter {
      * @see berlin.reiche.jtriple.converter.Converter#canConvert(java.lang.Class)
      */
     @Override
-    public boolean canConvert(Class<?> type) {
+    public boolean canConvert(Class<?> type, Object object) {
         return type.isPrimitive() || type.isEnum()
                 || simpleTypes.contains(type);
     }

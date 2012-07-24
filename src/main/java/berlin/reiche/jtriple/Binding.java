@@ -1,13 +1,17 @@
 package berlin.reiche.jtriple;
 
+import static berlin.reiche.jtriple.converter.Converter.Priority.HIGH;
+import static berlin.reiche.jtriple.converter.Converter.Priority.LOW;
 import static berlin.reiche.jtriple.converter.Converter.Priority.MEDIUM;
 
 import java.lang.reflect.Field;
-import java.util.ArrayDeque;
-import java.util.Deque;
-import java.util.PriorityQueue;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import berlin.reiche.jtriple.converter.Converter;
+import berlin.reiche.jtriple.converter.NullConverter;
+import berlin.reiche.jtriple.converter.ObjectConverter;
 import berlin.reiche.jtriple.converter.SimpleConverter;
 import berlin.reiche.jtriple.rdf.Id;
 
@@ -37,7 +41,7 @@ public class Binding {
     /**
      * Different converters specialized to convert certain types.
      */
-    private final PriorityQueue<Converter> converters;
+    private final List<Converter> converters;
 
     /**
      * Initializes a new binding by creating a RDF model with default
@@ -49,40 +53,45 @@ public class Binding {
     public Binding(String namespace) {
         this.model = ModelFactory.createDefaultModel();
         this.namespace = namespace;
-        this.converters = new PriorityQueue<>();
-        this.converters.add(new SimpleConverter(MEDIUM.value(), model, namespace));
+        this.converters = new ArrayList<>();
+        this.converters.add(new ObjectConverter(LOW.value(), this));
+        this.converters.add(new SimpleConverter(MEDIUM.value(), this));
+        this.converters.add(new NullConverter(HIGH.value(), this));
+        Collections.sort(converters);
     }
 
     /**
      * Binds an object to the RDF model.
      * 
-     * @param object
+     * @param individual
      *            the object which will be bind.
-     * @throws IllegalAccessException
-     * @throws IllegalArgumentException
+     * @throws Exception
      */
-    public void bind(Object object) throws IllegalArgumentException,
-            IllegalAccessException {
+    public void bind(Object individual) throws Exception {
 
-        Class<?> cls = object.getClass();
-        String name = cls.getSimpleName();
+        Class<?> type = individual.getClass();
+        Resource resource = createNewResource(individual, type);
+
+        for (Field field : Util.getAllFields(type)) {
+            field.setAccessible(true);
+            Object fieldObject = field.get(individual);
+            field.setAccessible(false);
+
+            Class<?> fieldType = field.getType();
+            Converter converter = determineConverter(fieldType, fieldObject);
+            converter.convertField(resource, field, fieldObject);            
+        }
+    }
+
+    public Resource createNewResource(Object object, Class<?> type)
+            throws Exception {
+
+        String name = type.getSimpleName();
         String id = getId(object).toString();
 
         Resource resource = model.createResource(namespace + name + "/" + id);
         resource.addProperty(RDF.type, namespace + name);
-
-        Deque<Field> fields = new ArrayDeque<>(Util.getAllFields(cls));
-        Field field = null;
-        while ((field = fields.pollFirst()) != null) {
-            field.setAccessible(true);
-            Object instance = field.get(object);
-            field.setAccessible(false);
-            
-            Class<?> type = field.getType();
-            Converter converter = determineConverter(type);            
-            converter.convert(resource, field, instance);
-        }
-
+        return resource;
     }
 
     /**
@@ -91,10 +100,10 @@ public class Binding {
      * 
      * @return the corresponding converter for the given class.
      */
-    private Converter determineConverter(Class<?> cls) {
+    private Converter determineConverter(Class<?> cls, Object object) {
 
         for (Converter converter : converters) {
-            if (converter.canConvert(cls)) {
+            if (converter.canConvert(cls, object)) {
                 return converter;
             }
         }
@@ -112,8 +121,7 @@ public class Binding {
      * @throws IllegalAccessException
      * @throws IllegalArgumentException
      */
-    public Object getId(Object object) throws IllegalArgumentException,
-            IllegalAccessException {
+    public Object getId(Object object) throws Exception {
 
         Object id = null;
         for (Field field : Util.getAllFields(object.getClass())) {
@@ -130,6 +138,10 @@ public class Binding {
 
     public Model getModel() {
         return model;
+    }
+
+    public String getNamespace() {
+        return namespace;
     }
 
 }

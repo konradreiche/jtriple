@@ -18,7 +18,7 @@ public interface Converter extends Comparable<Converter> {
      */
     enum Priority {
 
-        LOW(1), MEDIUM(50), HIGH(100);
+        HIGH(1), MEDIUM(2), LOW(3);
 
         /**
          * The priority value.
@@ -45,16 +45,17 @@ public interface Converter extends Comparable<Converter> {
      * Converts the object to RDF statements which are immediately added to the
      * model.
      * 
-     * @param resource
-     *            the parent resource to which the field value is added as a
+     * @param subject
+     *            the neighbour resource to which the field value is added as a
      *            property.
-     * @param field
+     * @param predicate
      *            the field to be converted.
      * @param object
      *            the field instance to be converted.
+     * @throws Exception 
      */
-    void convert(Resource resource, Field field, Object object);
-
+    void convertField(Resource subject, Field predicate, Object object) throws Exception;
+    
     /**
      * In order to determine the appropriate converter this method is used to
      * check it.
@@ -63,7 +64,7 @@ public interface Converter extends Comparable<Converter> {
      *            the type of the field to be converted.
      * @return whether this converted can be applied to the field.
      */
-    boolean canConvert(Class<?> type);
+    boolean canConvert(Class<?> type, Object object);
 
     int getPriority();
 
