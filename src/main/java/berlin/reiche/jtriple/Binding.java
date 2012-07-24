@@ -14,6 +14,7 @@ import berlin.reiche.jtriple.converter.NullConverter;
 import berlin.reiche.jtriple.converter.ObjectConverter;
 import berlin.reiche.jtriple.converter.SimpleConverter;
 import berlin.reiche.jtriple.rdf.Id;
+import berlin.reiche.jtriple.rdf.Transient;
 
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
@@ -73,13 +74,17 @@ public class Binding {
         Resource resource = createNewResource(individual, type);
 
         for (Field field : Util.getAllFields(type)) {
+            
+            if (field.isAnnotationPresent(Transient.class))
+                continue;
+
             field.setAccessible(true);
             Object fieldObject = field.get(individual);
             field.setAccessible(false);
 
             Class<?> fieldType = field.getType();
             Converter converter = determineConverter(fieldType, fieldObject);
-            converter.convertField(resource, field, fieldObject);            
+            converter.convertField(resource, field, fieldObject);
         }
     }
 
