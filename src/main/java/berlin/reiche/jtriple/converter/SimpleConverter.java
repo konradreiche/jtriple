@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import berlin.reiche.jtriple.rdf.Id;
+import berlin.reiche.jtriple.rdf.RdfProperty;
 
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.Property;
@@ -74,9 +75,14 @@ public class SimpleConverter extends AbstractConverter {
         if (field.isAnnotationPresent(Id.class)) {
             return;
         }
-
+        
         String name = field.getName();
-        Property property = model.createProperty(namespace + name);
+        String uri = namespace + name;
+        if (field.isAnnotationPresent(RdfProperty.class)) {
+            uri = field.getAnnotation(RdfProperty.class).value();
+        }
+
+        Property property = model.createProperty(uri);
         resource.addProperty(property, object.toString());
     }
 
