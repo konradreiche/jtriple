@@ -9,15 +9,18 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import berlin.reiche.jtriple.converter.CollectionConverter;
 import berlin.reiche.jtriple.converter.Converter;
 import berlin.reiche.jtriple.converter.NullConverter;
 import berlin.reiche.jtriple.converter.ObjectConverter;
 import berlin.reiche.jtriple.converter.SimpleConverter;
 import berlin.reiche.jtriple.rdf.Id;
+import berlin.reiche.jtriple.rdf.RdfProperty;
 import berlin.reiche.jtriple.rdf.Transient;
 
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
+import com.hp.hpl.jena.rdf.model.Property;
 import com.hp.hpl.jena.rdf.model.Resource;
 import com.hp.hpl.jena.vocabulary.RDF;
 
@@ -57,6 +60,7 @@ public class Binding {
         this.converters = new ArrayList<>();
         this.converters.add(new ObjectConverter(LOW.value(), this));
         this.converters.add(new SimpleConverter(MEDIUM.value(), this));
+        this.converters.add(new CollectionConverter(MEDIUM.value(), this));
         this.converters.add(new NullConverter(HIGH.value(), this));
         Collections.sort(converters);
     }
@@ -74,17 +78,25 @@ public class Binding {
         Resource resource = createNewResource(individual, type);
 
         for (Field field : Util.getAllFields(type)) {
-            
-            if (field.isAnnotationPresent(Transient.class))
+
+            if (field.isAnnotationPresent(Transient.class)
+                    || field.isAnnotationPresent(Id.class))
                 continue;
 
             field.setAccessible(true);
-            Object fieldObject = field.get(individual);
+            Object fieldValue = field.get(individual);
             field.setAccessible(false);
 
+            String name = field.getName();
+            String uri = getNamespace() + name;
+            if (field.isAnnotationPresent(RdfProperty.class)) {
+                uri = field.getAnnotation(RdfProperty.class).value();
+            }
+
+            Property property = model.createProperty(uri);
             Class<?> fieldType = field.getType();
-            Converter converter = determineConverter(fieldType, fieldObject);
-            converter.convertField(resource, field, fieldObject);
+            Converter converter = determineConverter(fieldType, fieldValue);
+            converter.convertEntity(resource, property, fieldValue);
         }
     }
 
@@ -105,7 +117,7 @@ public class Binding {
      * 
      * @return the corresponding converter for the given class.
      */
-    private Converter determineConverter(Class<?> cls, Object object) {
+    public Converter determineConverter(Class<?> cls, Object object) {
 
         for (Converter converter : converters) {
             if (converter.canConvert(cls, object)) {

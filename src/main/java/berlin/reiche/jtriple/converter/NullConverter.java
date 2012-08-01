@@ -1,9 +1,8 @@
 package berlin.reiche.jtriple.converter;
 
-import java.lang.reflect.Field;
-
 import berlin.reiche.jtriple.Binding;
 
+import com.hp.hpl.jena.rdf.model.Property;
 import com.hp.hpl.jena.rdf.model.Resource;
 
 public class NullConverter extends AbstractConverter {
@@ -13,7 +12,7 @@ public class NullConverter extends AbstractConverter {
     }
 
     @Override
-    public void convertField(Resource subject, Field predicate, Object object)
+    public void convertEntity(Resource subject, Property predicate, Object object)
             throws Exception {
         return;
     }

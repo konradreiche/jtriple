@@ -1,7 +1,6 @@
 package berlin.reiche.jtriple.converter;
 
-import java.lang.reflect.Field;
-
+import com.hp.hpl.jena.rdf.model.Property;
 import com.hp.hpl.jena.rdf.model.Resource;
 
 /**
@@ -42,20 +41,23 @@ public interface Converter extends Comparable<Converter> {
     }
 
     /**
-     * Converts the object to RDF statements which are immediately added to the
-     * model.
+     * Converts the object to a RDF statement which is then immediately added to
+     * the model.
      * 
      * @param subject
-     *            the neighbour resource to which the field value is added as a
+     *            the neighbor resource to which the object is added as a
      *            property.
      * @param predicate
-     *            the field to be converted.
+     *            the property for the triple creation connecting both
+     *            resources.
      * @param object
-     *            the field instance to be converted.
-     * @throws Exception 
+     *            the entity value to be converted.
+     *            
+     * @throws Exception
      */
-    void convertField(Resource subject, Field predicate, Object object) throws Exception;
-    
+    void convertEntity(Resource subject, Property predicate, Object object)
+            throws Exception;
+
     /**
      * In order to determine the appropriate converter this method is used to
      * check it.

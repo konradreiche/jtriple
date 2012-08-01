@@ -1,9 +1,6 @@
 package berlin.reiche.jtriple.converter;
 
-import java.lang.reflect.Field;
-
 import berlin.reiche.jtriple.Binding;
-import berlin.reiche.jtriple.rdf.RdfProperty;
 
 import com.hp.hpl.jena.rdf.model.Property;
 import com.hp.hpl.jena.rdf.model.Resource;
@@ -21,19 +18,10 @@ public class ObjectConverter extends AbstractConverter {
     }
 
     @Override
-    public void convertField(Resource subject, Field predicate, Object object) throws Exception {
-        
-        Resource nextResource = binding.createNewResource(object, predicate.getType());
+    public void convertEntity(Resource subject, Property predicate, Object object) throws Exception {
+        Resource nextResource = binding.createNewResource(object, object.getClass());
         binding.bind(object);
-        
-        String name = predicate.getName();
-        String uri = binding.getNamespace() + name;
-        if (predicate.isAnnotationPresent(RdfProperty.class)) {
-            uri = predicate.getAnnotation(RdfProperty.class).value();
-        }
-        
-        Property property = binding.getModel().createProperty(uri);
-        subject.addProperty(property, nextResource);                 
+        subject.addProperty(predicate, nextResource);                 
     }
 
     

@@ -1,14 +1,11 @@
 package berlin.reiche.jtriple.converter;
 
-import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
 import berlin.reiche.jtriple.Binding;
-import berlin.reiche.jtriple.rdf.Id;
-import berlin.reiche.jtriple.rdf.RdfProperty;
 
 import com.hp.hpl.jena.rdf.model.Property;
 import com.hp.hpl.jena.rdf.model.Resource;
@@ -49,24 +46,12 @@ public class SimpleConverter extends AbstractConverter {
      * Simply creates a property out of the field and creates the triple out of
      * the given parent resource, the property and the field value as literal.
      * 
-     * @see berlin.reiche.jtriple.converter.Converter#convertField(com.hp.hpl.jena.rdf.model.Resource,
+     * @see berlin.reiche.jtriple.converter.Converter#convertEntity(com.hp.hpl.jena.rdf.model.Resource,
      *      java.lang.reflect.Field, java.lang.Object)
      */
     @Override
-    public void convertField(Resource resource, Field field, Object object) {
-
-        if (field.isAnnotationPresent(Id.class)) {
-            return;
-        }
-
-        String name = field.getName();
-        String uri = binding.getNamespace() + name;
-        if (field.isAnnotationPresent(RdfProperty.class)) {
-            uri = field.getAnnotation(RdfProperty.class).value();
-        }
-
-        Property property = binding.getModel().createProperty(uri);
-        resource.addProperty(property, object.toString());
+    public void convertEntity(Resource resource, Property predicate, Object object) {
+        resource.addProperty(predicate, object.toString());
     }
 
     /**
