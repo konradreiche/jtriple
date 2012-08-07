@@ -5,6 +5,9 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
+import berlin.reiche.jtriple.rdf.RdfIdentifier;
+import berlin.reiche.jtriple.rdf.Transient;
+
 /**
  * Utility methods for Java Reflection.
  * 
@@ -77,6 +80,38 @@ public class Util {
      */
     public static List<Method> getAllMethods(Class<?> cls) {
         return getAllMethods(new ArrayList<Method>(), cls);
+    }
+
+    /**
+     * Sometimes the fields of an object are throughout <code>null</code> or all
+     * fields are annotated as {@link Transient}. If this is the case the object
+     * does not hold any information for the resource it should be associated
+     * with. This method checks whether this is the case.
+     * 
+     * @param object
+     *            the object to be checked for <code>null</code> fields.
+     * @return whether the object's fields are throughout <code>null</code>
+     * @throws IllegalAccessException
+     * @throws IllegalArgumentException
+     */
+    public static boolean isEmpty(Object object)
+            throws IllegalArgumentException, IllegalAccessException {
+
+        for (Field field : Util.getAllFields(object.getClass())) {
+
+            if (field.isAnnotationPresent(RdfIdentifier.class)
+                    || field.isAnnotationPresent(Transient.class)) {
+                continue;
+            }
+
+            field.setAccessible(true);
+            Object value = field.get(object);
+            field.setAccessible(false);
+            if (value != null) {
+                return false;
+            }
+        }
+        return true;
     }
 
 }

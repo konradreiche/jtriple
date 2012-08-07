@@ -3,6 +3,7 @@ package berlin.reiche.jtriple.converter;
 import java.util.Collection;
 
 import berlin.reiche.jtriple.Binding;
+import berlin.reiche.jtriple.Util;
 
 import com.hp.hpl.jena.rdf.model.Property;
 import com.hp.hpl.jena.rdf.model.Resource;
@@ -19,7 +20,7 @@ public class CollectionConverter extends AbstractConverter {
             throws Exception {
         
         Collection<?> collection = (Collection<?>) object;
-        for (Object element : collection) {
+        for (Object element : collection) {            
             binding.bind(element);
             Class<?> cls = element.getClass();
             Converter converter = binding.determineConverter(cls, element);

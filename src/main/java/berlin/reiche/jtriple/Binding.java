@@ -5,6 +5,7 @@ import static berlin.reiche.jtriple.converter.Converter.Priority.LOW;
 import static berlin.reiche.jtriple.converter.Converter.Priority.MEDIUM;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -14,7 +15,7 @@ import berlin.reiche.jtriple.converter.Converter;
 import berlin.reiche.jtriple.converter.NullConverter;
 import berlin.reiche.jtriple.converter.ObjectConverter;
 import berlin.reiche.jtriple.converter.SimpleConverter;
-import berlin.reiche.jtriple.rdf.Id;
+import berlin.reiche.jtriple.rdf.RdfIdentifier;
 import berlin.reiche.jtriple.rdf.RdfProperty;
 import berlin.reiche.jtriple.rdf.Transient;
 
@@ -80,7 +81,7 @@ public class Binding {
         for (Field field : Util.getAllFields(type)) {
 
             if (field.isAnnotationPresent(Transient.class)
-                    || field.isAnnotationPresent(Id.class))
+                    || field.isAnnotationPresent(RdfIdentifier.class))
                 continue;
 
             field.setAccessible(true);
@@ -142,15 +143,22 @@ public class Binding {
 
         Object id = null;
         for (Field field : Util.getAllFields(object.getClass())) {
-
-            if (field.isAnnotationPresent(Id.class)) {
+            if (field.isAnnotationPresent(RdfIdentifier.class)) {
                 field.setAccessible(true);
                 id = field.get(object);
                 field.setAccessible(false);
-                break;
+                return id;
             }
         }
-        return id;
+        
+        for (Method method : Util.getAllMethods(object.getClass())) {
+            if (method.isAnnotationPresent(RdfIdentifier.class)) {
+                id = method.invoke(object);
+                return id;
+            }
+        }
+        
+        throw new Exception("No identifier definined in " + object.getClass());
     }
 
     public Model getModel() {
