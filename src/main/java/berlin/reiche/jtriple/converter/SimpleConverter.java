@@ -50,7 +50,8 @@ public class SimpleConverter extends AbstractConverter {
      *      java.lang.reflect.Field, java.lang.Object)
      */
     @Override
-    public void convertEntity(Resource resource, Property predicate, Object object) {
+    public void convertEntity(Resource resource, Property predicate,
+            Object object) {
         resource.addProperty(predicate, object.toString());
     }
 

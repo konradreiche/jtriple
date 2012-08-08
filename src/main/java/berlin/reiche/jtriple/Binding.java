@@ -75,6 +75,10 @@ public class Binding {
      */
     public void bind(Object individual) throws Exception {
 
+        if (Util.isEmpty(individual)) {
+            return;
+        }
+        
         Class<?> type = individual.getClass();
         Resource resource = createNewResource(individual, type);
 
