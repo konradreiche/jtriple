@@ -52,6 +52,11 @@ public class SimpleConverter extends AbstractConverter {
     @Override
     public void convertEntity(Resource resource, Property predicate,
             Object object) {
+        
+        if (object.getClass() == String.class) {
+            object = object.toString().replace("\"", "'");
+        }
+        
         resource.addProperty(predicate, object.toString());
     }
 
