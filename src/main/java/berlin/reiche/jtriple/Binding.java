@@ -78,7 +78,7 @@ public class Binding {
         if (Util.isEmpty(individual)) {
             return;
         }
-        
+
         Class<?> type = individual.getClass();
         Resource resource = createNewResource(individual, type);
 
@@ -103,6 +103,22 @@ public class Binding {
             Converter converter = determineConverter(fieldType, fieldValue);
             converter.convertEntity(resource, property, fieldValue);
         }
+
+        for (Method method : Util.getAllMethods(type)) {
+
+            if (method.isAnnotationPresent(RdfProperty.class)) {
+                String uri = method.getAnnotation(RdfProperty.class).value();
+                method.setAccessible(true);
+                Object methodValue = method.invoke(individual);
+                method.setAccessible(false);
+                Property property = model.createProperty(uri);
+                Converter converter = determineConverter(
+                        method.getReturnType(), methodValue);
+                converter.convertEntity(resource, property, methodValue);
+            }
+
+        }
+
     }
 
     public Resource createNewResource(Object object, Class<?> type)
@@ -154,14 +170,14 @@ public class Binding {
                 return id;
             }
         }
-        
+
         for (Method method : Util.getAllMethods(object.getClass())) {
             if (method.isAnnotationPresent(RdfIdentifier.class)) {
                 id = method.invoke(object);
                 return id;
             }
         }
-        
+
         throw new Exception("No identifier definined in " + object.getClass());
     }
 
