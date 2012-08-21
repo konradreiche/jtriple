@@ -12,6 +12,7 @@ import java.util.List;
 
 import berlin.reiche.jtriple.converter.CollectionConverter;
 import berlin.reiche.jtriple.converter.Converter;
+import berlin.reiche.jtriple.converter.EnumConverter;
 import berlin.reiche.jtriple.converter.NullConverter;
 import berlin.reiche.jtriple.converter.ObjectConverter;
 import berlin.reiche.jtriple.converter.SimpleConverter;
@@ -61,6 +62,7 @@ public class Binding {
         this.converters = new ArrayList<>();
         this.converters.add(new ObjectConverter(LOW.value(), this));
         this.converters.add(new SimpleConverter(MEDIUM.value(), this));
+        this.converters.add(new EnumConverter(MEDIUM.value(), this));
         this.converters.add(new CollectionConverter(MEDIUM.value(), this));
         this.converters.add(new NullConverter(HIGH.value(), this));
         Collections.sort(converters);
@@ -80,12 +82,13 @@ public class Binding {
         }
 
         Class<?> type = individual.getClass();
-        Resource resource = createNewResource(individual, type);
+        Resource resource = createNewResource(individual);
 
         for (Field field : Util.getAllFields(type)) {
 
             if (field.isAnnotationPresent(Transient.class)
-                    || field.isAnnotationPresent(RdfIdentifier.class))
+                    || field.isAnnotationPresent(RdfIdentifier.class)
+                    || field.isEnumConstant())
                 continue;
 
             field.setAccessible(true);
@@ -121,9 +124,9 @@ public class Binding {
 
     }
 
-    public Resource createNewResource(Object object, Class<?> type)
-            throws Exception {
+    public Resource createNewResource(Object object) throws Exception {
 
+        Class<?> type = object.getClass();
         String name = type.getSimpleName();
         String id = getId(object).toString();
 
@@ -176,6 +179,10 @@ public class Binding {
                 id = method.invoke(object);
                 return id;
             }
+        }
+
+        if (object.getClass().isEnum()) {
+            return object.toString();
         }
 
         throw new Exception("No identifier definined in " + object.getClass());

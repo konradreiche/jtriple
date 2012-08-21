@@ -52,11 +52,11 @@ public class SimpleConverter extends AbstractConverter {
     @Override
     public void convertEntity(Resource resource, Property predicate,
             Object object) {
-        
+
         if (object.getClass() == String.class) {
             object = object.toString().replace("\"", "'");
         }
-        
+
         resource.addProperty(predicate, object.toString());
     }
 
@@ -69,8 +69,7 @@ public class SimpleConverter extends AbstractConverter {
      */
     @Override
     public boolean canConvert(Class<?> type, Object object) {
-        return type.isPrimitive() || type.isEnum()
-                || simpleTypes.contains(type);
+        return type.isPrimitive() || simpleTypes.contains(type);
     }
 
 }

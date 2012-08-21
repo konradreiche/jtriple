@@ -23,8 +23,7 @@ public class ObjectConverter extends AbstractConverter {
             Object object) throws Exception {
 
         if (!Util.isEmpty(object)) {
-            Resource nextResource = binding.createNewResource(object,
-                    object.getClass());
+            Resource nextResource = binding.createNewResource(object);
             binding.bind(object);
             subject.addProperty(predicate, nextResource);
         }

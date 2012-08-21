@@ -97,7 +97,8 @@ public class Util {
     public static boolean isEmpty(Object object)
             throws IllegalArgumentException, IllegalAccessException {
 
-        for (Field field : Util.getAllFields(object.getClass())) {
+        Class<?> type = object.getClass();
+        for (Field field : Util.getAllFields(type)) {
 
             if (field.isAnnotationPresent(RdfIdentifier.class)
                     || field.isAnnotationPresent(Transient.class)) {
@@ -111,7 +112,8 @@ public class Util {
                 return false;
             }
         }
-        return true;
+        
+        return !type.isEnum();
     }
 
 }
