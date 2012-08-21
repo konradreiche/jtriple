@@ -130,8 +130,9 @@ public class Binding {
         String name = type.getSimpleName();
         String id = getId(object).toString();
 
+        Resource cls = model.createResource(namespace + name);
         Resource resource = model.createResource(namespace + name + "/" + id);
-        resource.addProperty(RDF.type, namespace + name);
+        resource.addProperty(RDF.type, cls);
         return resource;
     }
 
