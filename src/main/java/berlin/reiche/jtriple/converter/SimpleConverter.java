@@ -1,12 +1,14 @@
 package berlin.reiche.jtriple.converter;
 
 import java.math.BigDecimal;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
 import berlin.reiche.jtriple.Binding;
 
+import com.hp.hpl.jena.rdf.model.Literal;
 import com.hp.hpl.jena.rdf.model.Property;
 import com.hp.hpl.jena.rdf.model.Resource;
 
@@ -57,7 +59,14 @@ public class SimpleConverter extends AbstractConverter {
             object = object.toString().replace("\"", "'");
         }
 
-        resource.addProperty(predicate, object.toString());
+        if (object instanceof Date) {
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime((Date) object);
+            object = calendar;
+        }
+
+        Literal literal = binding.getModel().createTypedLiteral(object);
+        resource.addProperty(predicate, literal);
     }
 
     /**

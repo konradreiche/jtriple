@@ -18,6 +18,7 @@ import berlin.reiche.jtriple.converter.ObjectConverter;
 import berlin.reiche.jtriple.converter.SimpleConverter;
 import berlin.reiche.jtriple.rdf.RdfIdentifier;
 import berlin.reiche.jtriple.rdf.RdfProperty;
+import berlin.reiche.jtriple.rdf.RdfType;
 import berlin.reiche.jtriple.rdf.Transient;
 
 import com.hp.hpl.jena.rdf.model.Model;
@@ -136,10 +137,14 @@ public class Binding {
         Class<?> type = object.getClass();
         String name = type.getSimpleName();
         String id = getId(object).toString();
-
-        Resource cls = model.createResource(namespace + name);
+        
+        String uri = namespace + name;
+        if (type.isAnnotationPresent(RdfType.class)) {
+            uri = type.getAnnotation(RdfType.class).value();
+        }
+        Resource rdfType = model.createResource(uri);
         Resource resource = model.createResource(namespace + name + "/" + id);
-        resource.addProperty(RDF.type, cls);
+        resource.addProperty(RDF.type, rdfType);
         return resource;
     }
 
