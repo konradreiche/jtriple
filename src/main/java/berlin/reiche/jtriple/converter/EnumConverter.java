@@ -25,7 +25,8 @@ public class EnumConverter extends AbstractConverter {
         Field field = object.getClass().getField(((Enum<?>) object).name());
         if (field.isAnnotationPresent(SameAs.class)) {
             for (String uri : field.getAnnotation(SameAs.class).value()) {
-                newResource.addProperty(OWL.sameAs, uri);
+            	Resource sameAs = binding.getModel().createResource(uri);
+                newResource.addProperty(OWL.sameAs, sameAs);
             }
 
         }
