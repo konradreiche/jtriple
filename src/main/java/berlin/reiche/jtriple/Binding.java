@@ -99,6 +99,9 @@ public class Binding {
             String uri = getNamespace() + name;
             if (field.isAnnotationPresent(RdfProperty.class)) {
                 uri = field.getAnnotation(RdfProperty.class).value();
+                if (!uri.startsWith("http://")) {
+                    uri = namespace + uri;
+                }
             }
 
             Property property = model.createProperty(uri);
@@ -111,6 +114,10 @@ public class Binding {
 
             if (method.isAnnotationPresent(RdfProperty.class)) {
                 String uri = method.getAnnotation(RdfProperty.class).value();
+                if (!uri.startsWith("http://")) {
+                    uri = namespace + uri;
+                }
+                
                 method.setAccessible(true);
                 Object methodValue = method.invoke(individual);
                 method.setAccessible(false);
