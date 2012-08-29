@@ -19,18 +19,19 @@ public class EnumConverter extends AbstractConverter {
     public void convertEntity(Resource subject, Property predicate,
             Object object) throws Exception {
 
+        Class<?> type = object.getClass();
         Resource newResource = binding.createNewResource(object);
         subject.addProperty(predicate, newResource);
 
-        Field field = object.getClass().getField(((Enum<?>) object).name());
-        if (field.isAnnotationPresent(SameAs.class)) {
-            for (String uri : field.getAnnotation(SameAs.class).value()) {
-            	Resource sameAs = binding.getModel().createResource(uri);
+        Field enumField = type.getField(((Enum<?>) object).name());
+        if (enumField.isAnnotationPresent(SameAs.class)) {
+            for (String uri : enumField.getAnnotation(SameAs.class).value()) {
+                Resource sameAs = binding.getModel().createResource(uri);
                 newResource.addProperty(OWL.sameAs, sameAs);
             }
-
         }
 
+        binding.bind(object);
     }
 
     @Override

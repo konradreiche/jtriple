@@ -89,7 +89,8 @@ public class Binding {
 
             if (field.isAnnotationPresent(Transient.class)
                     || field.isAnnotationPresent(RdfIdentifier.class)
-                    || field.isEnumConstant())
+                    || field.isEnumConstant()
+                    || field.getDeclaringClass() == Enum.class)
                 continue;
 
             field.setAccessible(true);
@@ -118,7 +119,7 @@ public class Binding {
                 if (!uri.startsWith("http://")) {
                     uri = namespace + uri;
                 }
-                
+
                 method.setAccessible(true);
                 Object methodValue = method.invoke(individual);
                 method.setAccessible(false);
@@ -132,18 +133,39 @@ public class Binding {
 
     }
 
+    /**
+     * Each object which is not a simple type with respect to the
+     * {@link SimpleConverter} and was not bound to the model already needs two
+     * resources. One resource describes the type of the resource and one
+     * resource represents the object itself.
+     * 
+     * If the object was already bound to the model Jena will return the
+     * existing resources with the correct URI and model.
+     * 
+     * @param object
+     *            the object to be bound to the model.
+     * @return the resource representing the object.
+     */
     public Resource createNewResource(Object object) throws Exception {
 
         Class<?> type = object.getClass();
-        String name = type.getSimpleName();
+        String typeName = type.getSimpleName();
         String id = getId(object).toString();
-        
-        String uri = namespace + name;
+
+        String typeUri = namespace + typeName;
         if (type.isAnnotationPresent(RdfType.class)) {
-            uri = type.getAnnotation(RdfType.class).value();
+            typeUri = type.getAnnotation(RdfType.class).value();
         }
-        Resource rdfType = model.createResource(uri);
-        Resource resource = model.createResource(namespace + name + "/" + id);
+        
+        String individualUri = namespace + typeName;
+        if (typeUri.endsWith("#")) {
+            individualUri += id;
+        } else {
+            individualUri += "/"  + id; 
+        }
+                
+        Resource rdfType = model.createResource(typeUri);
+        Resource resource = model.createResource(individualUri);
         resource.addProperty(RDF.type, rdfType);
         return resource;
     }
