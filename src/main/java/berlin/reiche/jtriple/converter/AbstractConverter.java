@@ -1,5 +1,8 @@
 package berlin.reiche.jtriple.converter;
 
+import com.hp.hpl.jena.rdf.model.Property;
+import com.hp.hpl.jena.rdf.model.Resource;
+
 import berlin.reiche.jtriple.Binding;
 
 /**
@@ -10,14 +13,14 @@ import berlin.reiche.jtriple.Binding;
  * @author Konrad Reiche
  * 
  */
-abstract class AbstractConverter implements Converter {
-
-    /**
-     * The priority of this converter.
-     */
-    private final int priority;
+public abstract class AbstractConverter implements Converter {
 
     Binding binding;
+
+    /**
+     * The follow-up converter to be use if this converter is not applicable.
+     */
+    Converter succesor;
 
     /**
      * Default constructor.
@@ -25,24 +28,23 @@ abstract class AbstractConverter implements Converter {
      * @param priority
      *            the priority for this converter.
      */
-    public AbstractConverter(int priority, Binding binding) {
-        this.priority = priority;
+    public AbstractConverter(Binding binding) {
         this.binding = binding;
     }
 
-    /**
-     * Compares the converter based on their priority.
-     * 
-     * @see java.lang.Comparable#compareTo(java.lang.Object)
-     */
-    @Override
-    public int compareTo(Converter o) {
-        return Integer.valueOf(priority).compareTo(o.getPriority());
-    }
+    public void convertEntity(Class<?> type, Object instance, Resource subject,
+            Property predicate, Object object) throws Exception {
 
+        if (canConvert(type, instance)) {
+            convertEntity(subject, predicate, object);
+        } else {
+            succesor.convertEntity(type, instance, subject, predicate, object);
+        }
+    }
+    
     @Override
-    public int getPriority() {
-        return priority;
+    public void setSuccessor(Converter succesor) {
+        this.succesor = succesor;
     }
 
 }

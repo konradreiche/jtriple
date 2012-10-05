@@ -1,14 +1,7 @@
 package berlin.reiche.jtriple;
 
-import static berlin.reiche.jtriple.converter.Converter.Priority.HIGH;
-import static berlin.reiche.jtriple.converter.Converter.Priority.LOW;
-import static berlin.reiche.jtriple.converter.Converter.Priority.MEDIUM;
-
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
 import berlin.reiche.jtriple.converter.CollectionConverter;
 import berlin.reiche.jtriple.converter.Converter;
@@ -46,9 +39,9 @@ public class Binding {
     private final String namespace;
 
     /**
-     * Different converters specialized to convert certain types.
+     * A base converter which starts the conversion procedure.
      */
-    private final List<Converter> converters;
+    private final Converter converter;
 
     /**
      * Initializes a new binding by creating a RDF model with default
@@ -60,13 +53,19 @@ public class Binding {
     public Binding(String namespace) {
         this.model = ModelFactory.createDefaultModel();
         this.namespace = namespace;
-        this.converters = new ArrayList<>();
-        this.converters.add(new ObjectConverter(LOW.value(), this));
-        this.converters.add(new SimpleConverter(MEDIUM.value(), this));
-        this.converters.add(new EnumConverter(MEDIUM.value(), this));
-        this.converters.add(new CollectionConverter(MEDIUM.value(), this));
-        this.converters.add(new NullConverter(HIGH.value(), this));
-        Collections.sort(converters);
+
+        Converter nullConverter = new NullConverter(this);
+        Converter collectionConverter = new CollectionConverter(this);
+        Converter enumConverter = new EnumConverter(this);
+        Converter simpleConverter = new SimpleConverter(this);
+        Converter objectConverter = new ObjectConverter(this);
+
+        nullConverter.setSuccessor(collectionConverter);
+        collectionConverter.setSuccessor(enumConverter);
+        enumConverter.setSuccessor(simpleConverter);
+        simpleConverter.setSuccessor(objectConverter);
+
+        this.converter = nullConverter;
     }
 
     /**
@@ -108,8 +107,8 @@ public class Binding {
 
             Property property = model.createProperty(uri);
             Class<?> fieldType = field.getType();
-            Converter converter = determineConverter(fieldType, fieldValue);
-            converter.convertEntity(resource, property, fieldValue);
+            converter.convertEntity(fieldType, fieldValue, resource, property,
+                    fieldValue);
         }
 
         for (Method method : Util.getAllMethods(type)) {
@@ -124,9 +123,8 @@ public class Binding {
                 Object methodValue = method.invoke(individual);
                 method.setAccessible(false);
                 Property property = model.createProperty(uri);
-                Converter converter = determineConverter(
-                        method.getReturnType(), methodValue);
-                converter.convertEntity(resource, property, methodValue);
+                converter.convertEntity(method.getReturnType(), methodValue,
+                        resource, property, methodValue);
             }
 
         }
@@ -156,35 +154,18 @@ public class Binding {
         if (type.isAnnotationPresent(RdfType.class)) {
             typeUri = type.getAnnotation(RdfType.class).value();
         }
-        
+
         String individualUri = namespace + typeName;
         if (typeUri.endsWith("#")) {
             individualUri += id;
         } else {
-            individualUri += "/"  + id; 
+            individualUri += "/" + id;
         }
-                
+
         Resource rdfType = model.createResource(typeUri);
         Resource resource = model.createResource(individualUri);
         resource.addProperty(RDF.type, rdfType);
         return resource;
-    }
-
-    /**
-     * In order to convert the field with the appropriate converter the given
-     * class is checked against the available converter.
-     * 
-     * @return the corresponding converter for the given class.
-     */
-    public Converter determineConverter(Class<?> cls, Object object) {
-
-        for (Converter converter : converters) {
-            if (converter.canConvert(cls, object)) {
-                return converter;
-            }
-        }
-
-        return null;
     }
 
     /**
@@ -229,6 +210,10 @@ public class Binding {
 
     public String getNamespace() {
         return namespace;
+    }
+
+    public Converter getConverter() {
+        return converter;
     }
 
 }

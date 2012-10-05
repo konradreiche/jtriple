@@ -14,8 +14,8 @@ public class ObjectConverter extends AbstractConverter {
      * @param priority
      *            the priority of this converter.
      */
-    public ObjectConverter(int priority, Binding binding) {
-        super(priority, binding);
+    public ObjectConverter(Binding binding) {
+        super(binding);
     }
 
     @Override

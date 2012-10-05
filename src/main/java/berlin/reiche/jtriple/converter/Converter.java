@@ -10,35 +10,7 @@ import com.hp.hpl.jena.rdf.model.Resource;
  * @author Konrad Reiche
  * 
  */
-public interface Converter extends Comparable<Converter> {
-
-    /**
-     * Predefined priorities.
-     */
-    enum Priority {
-
-        HIGH(1), MEDIUM(2), LOW(3);
-
-        /**
-         * The priority value.
-         */
-        private final int value;
-
-        /**
-         * Default constructor.
-         * 
-         * @param value
-         *            of the priority.
-         */
-        Priority(int value) {
-            this.value = value;
-        }
-
-        public int value() {
-            return value;
-        }
-
-    }
+public interface Converter {
 
     /**
      * Converts the object to a RDF statement which is then immediately added to
@@ -52,7 +24,25 @@ public interface Converter extends Comparable<Converter> {
      *            resources.
      * @param object
      *            the entity value to be converted.
-     *            
+     * 
+     * @throws Exception
+     */
+    void convertEntity(Class<?> type, Object instance, Resource subject,
+            Property predicate, Object object) throws Exception;
+
+    /**
+     * Converts the object to a RDF statement which is then immediately added to
+     * the model.
+     * 
+     * @param subject
+     *            the neighbor resource to which the object is added as a
+     *            property.
+     * @param predicate
+     *            the property for the triple creation connecting both
+     *            resources.
+     * @param object
+     *            the entity value to be converted.
+     * 
      * @throws Exception
      */
     void convertEntity(Resource subject, Property predicate, Object object)
@@ -66,8 +56,8 @@ public interface Converter extends Comparable<Converter> {
      *            the type of the field to be converted.
      * @return whether this converted can be applied to the field.
      */
-    boolean canConvert(Class<?> type, Object object);
-
-    int getPriority();
+    boolean canConvert(Class<?> type, Object instance);
+    
+    void setSuccessor(Converter succesor);
 
 }

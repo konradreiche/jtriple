@@ -33,8 +33,8 @@ public class SimpleConverter extends AbstractConverter {
      * @param priority
      *            the priority of this converter.
      */
-    public SimpleConverter(int priority, Binding binding) {
-        super(priority, binding);
+    public SimpleConverter(Binding binding) {
+        super(binding);
         simpleTypes = new HashSet<>();
         simpleTypes.add(BigDecimal.class);
         simpleTypes.add(Boolean.class);

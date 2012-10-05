@@ -11,8 +11,8 @@ import com.hp.hpl.jena.vocabulary.OWL;
 
 public class EnumConverter extends AbstractConverter {
 
-    public EnumConverter(int priority, Binding binding) {
-        super(priority, binding);
+    public EnumConverter(Binding binding) {
+        super(binding);
     }
 
     @Override
