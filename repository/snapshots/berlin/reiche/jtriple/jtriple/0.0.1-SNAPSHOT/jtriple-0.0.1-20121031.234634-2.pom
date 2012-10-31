@@ -17,11 +17,11 @@
 	<distributionManagement>
 		<repository>
 			<id>github.repository</id>
-			<url>file:///${basedir}/repository/releases</url>
+			<url>https://github.com/platzhirsch/jtriple/raw/master/repository/releases</url>
 		</repository>
 		<snapshotRepository>
 			<id>github.repository.snapshots</id>
-			<url>file:///${basedir}/repository/snapshots</url>
+			<url>https://github.com/platzhirsch/jtriple/raw/master/repository/snapshots</url>
 		</snapshotRepository>
 	</distributionManagement>
 
