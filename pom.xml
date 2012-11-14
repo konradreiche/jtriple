@@ -16,11 +16,11 @@
 
 	<distributionManagement>
 		<repository>
-			<id>github.repository</id>
+			<id>repository</id>
 			<url>file:///${basedir}/repository/releases</url>
 		</repository>
 		<snapshotRepository>
-			<id>github.repository.snapshots</id>
+			<id>repository.snapshots</id>
 			<url>file:///${basedir}/repository/snapshots</url>
 		</snapshotRepository>
 	</distributionManagement>
