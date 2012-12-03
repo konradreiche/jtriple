@@ -6,19 +6,17 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Provides a flexible way to add semantic links between resources by using the
- * owl:sameAs property.
+ * A shortcut for declaring a field as a rdfs:label property. Using this
+ * annotation is the same as using the {@link RdfProperty} with the value
+ * http://www.w3.org/2000/01/rdf-schema#label.
  * 
  * @author Konrad Reiche
  * 
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.FIELD, ElementType.METHOD })
-public @interface SameAs {
+public @interface Label {
 
-	/**
-	 * @return the set of URIs specifying the sameAs relationships.
-	 */
-	String[] value();
-
+	public final static String uri = "http://www.w3.org/2000/01/rdf-schema#label";
+	
 }

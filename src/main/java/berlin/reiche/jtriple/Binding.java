@@ -14,6 +14,7 @@ import berlin.reiche.jtriple.converter.NullConverter;
 import berlin.reiche.jtriple.converter.ObjectConverter;
 import berlin.reiche.jtriple.converter.SimpleConverter;
 import berlin.reiche.jtriple.rdf.IdentifierException;
+import berlin.reiche.jtriple.rdf.Label;
 import berlin.reiche.jtriple.rdf.RdfIdentifier;
 import berlin.reiche.jtriple.rdf.RdfProperty;
 import berlin.reiche.jtriple.rdf.RdfType;
@@ -129,6 +130,8 @@ public class Binding {
 					if (!uri.startsWith("http://")) {
 						uri = namespace + uri;
 					}
+				} else if (field.isAnnotationPresent(Label.class)) {
+					uri = Label.uri;
 				}
 
 				Property property = model.createProperty(uri);
