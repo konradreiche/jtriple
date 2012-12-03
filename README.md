@@ -163,22 +163,22 @@ What annotations are there and how can they be used?
     <th>Name</th><th>Use</th><th>Effect</th>
   </tr>
   <tr>
-    <td>@RdfIdentifier</td><td>Fields, Methods</td><td>Value to be used for constructing the resource URI</td>
+    <td><code>@RdfIdentifier</code></td><td>Fields, Methods</td><td>Value to be used for constructing the resource URI</td>
   </tr>
   <tr>
-    <td>@RdfProperty</td><td>Fields, Methods</td><td>Value to define another property URI</td>
+    <td><code>@RdfProperty</code></td><td>Fields, Methods</td><td>Value to define another property URI</td>
   </tr>
   <tr>
-    <td>@RdfType</td><td>Classes</td><td>Value to define a rdfs:type property on the resource</td>
+    <td><code>@RdfType</code></td><td>Classes</td><td>Value to define a rdfs:type property on the resource</td>
   </tr>
   <tr>
-    <td>@Transient</td><td>Fields</td><td>Indicate that this field must not be converted</td>
+    <td><code>@Transient</code></td><td>Fields</td><td>Indicate that this field must not be converted</td>
   </tr>
   <tr>
-    <td>@SameAs</td><td>Enum Constants</td><td>Value to define a owl:sameAs property on the resource</td>
+    <td><code>@SameAs</code></td><td>Enum Constants</td><td>Value to define a owl:sameAs property on the resource</td>
   </tr>
   <tr>
-    <td>@Label</td><td>Fields, Methods</td><td>Value to define a rdfs:label property on the resource</td>
+    <td><code>@Label</code></td><td>Fields, Methods</td><td>Value to define a rdfs:label property on the resource</td>
   </tr>
 </table>
 
