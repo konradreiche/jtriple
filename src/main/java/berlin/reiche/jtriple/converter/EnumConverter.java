@@ -2,7 +2,11 @@ package berlin.reiche.jtriple.converter;
 
 import java.lang.reflect.Field;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import berlin.reiche.jtriple.Binding;
+import berlin.reiche.jtriple.rdf.IdentifierException;
 import berlin.reiche.jtriple.rdf.SameAs;
 
 import com.hp.hpl.jena.rdf.model.Property;
@@ -16,6 +20,11 @@ import com.hp.hpl.jena.vocabulary.OWL;
  * 
  */
 public class EnumConverter extends AbstractConverter {
+
+	/**
+	 * Logger object to facilitate logging in this class.
+	 */
+	private final Logger logger = LoggerFactory.getLogger(EnumConverter.class);
 
 	/**
 	 * Default constructor.
@@ -39,20 +48,33 @@ public class EnumConverter extends AbstractConverter {
 	 */
 	@Override
 	public void convertEntity(Resource subject, Property predicate,
-			Object object) throws Exception {
+			Object object) {
 
-		Class<?> type = object.getClass();
-		Resource newResource = binding.createNewResource(object);
-		subject.addProperty(predicate, newResource);
+		try {
 
-		Field enumField = type.getField(((Enum<?>) object).name());
-		if (enumField.isAnnotationPresent(SameAs.class)) {
-			for (String uri : enumField.getAnnotation(SameAs.class).value()) {
-				Resource sameAs = binding.getModel().createResource(uri);
-				newResource.addProperty(OWL.sameAs, sameAs);
+			Class<?> type = object.getClass();
+			Resource newResource = binding.createNewResource(object);
+			subject.addProperty(predicate, newResource);
+
+			Field enumField = type.getField(((Enum<?>) object).name());
+			if (enumField.isAnnotationPresent(SameAs.class)) {
+				for (String uri : enumField.getAnnotation(SameAs.class).value()) {
+					Resource sameAs = binding.getModel().createResource(uri);
+					newResource.addProperty(OWL.sameAs, sameAs);
+				}
 			}
+
+			binding.bind(object);
+
+		} catch (NoSuchFieldException | SecurityException e) {
+			logger.error("Enum cannot be converted. There is "
+					+ "no enum constant {}", ((Enum<?>) object).name());
+			return;
+		} catch (IdentifierException e) {
+			logger.error("Entity cannot be converted. Identifier "
+					+ "could not be determined for {}", object);
+			return;
 		}
-		binding.bind(object);
 	}
 
 	/**

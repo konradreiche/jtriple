@@ -1,7 +1,11 @@
 package berlin.reiche.jtriple;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import berlin.reiche.jtriple.converter.CollectionConverter;
 import berlin.reiche.jtriple.converter.Converter;
@@ -9,6 +13,7 @@ import berlin.reiche.jtriple.converter.EnumConverter;
 import berlin.reiche.jtriple.converter.NullConverter;
 import berlin.reiche.jtriple.converter.ObjectConverter;
 import berlin.reiche.jtriple.converter.SimpleConverter;
+import berlin.reiche.jtriple.rdf.IdentifierException;
 import berlin.reiche.jtriple.rdf.RdfIdentifier;
 import berlin.reiche.jtriple.rdf.RdfProperty;
 import berlin.reiche.jtriple.rdf.RdfType;
@@ -44,6 +49,18 @@ public class Binding {
 	private final Converter converter;
 
 	/**
+	 * Logger object to facilitate logging in this class.
+	 */
+	private final Logger logger = LoggerFactory.getLogger(Binding.class);
+
+	/**
+	 * Error message used in several places to indicate a problem with the
+	 * accessibility caused by reflection.
+	 */
+	private static final String ACCESSIBILITY_ERROR = "Field or method "
+			+ "cannot be accessed of {}. This must not happen.";
+
+	/**
 	 * Initializes a new binding by creating a RDF model with default
 	 * specification and Standard reification style.
 	 * 
@@ -75,58 +92,74 @@ public class Binding {
 	 *            the object which will be bind.
 	 * @throws Exception
 	 */
-	public void bind(Object individual) throws Exception {
+	public void bind(Object individual) {
 
 		if (Util.isEmpty(individual)) {
 			return;
 		}
 
 		Class<?> type = individual.getClass();
-		Resource resource = createNewResource(individual);
+		Resource resource = null;
 
-		for (Field field : Util.getAllFields(type)) {
-
-			if (field.isAnnotationPresent(Transient.class)
-					|| field.isAnnotationPresent(RdfIdentifier.class)
-					|| field.isEnumConstant()
-					|| field.getDeclaringClass() == Enum.class)
-				continue;
-
-			field.setAccessible(true);
-			Object fieldValue = field.get(individual);
-			field.setAccessible(false);
-
-			String name = field.getName();
-			String uri = namespace + name;
-			if (field.isAnnotationPresent(RdfProperty.class)) {
-				uri = field.getAnnotation(RdfProperty.class).value();
-				if (!uri.startsWith("http://")) {
-					uri = namespace + uri;
-				}
-			}
-
-			Property property = model.createProperty(uri);
-			Class<?> fieldType = field.getType();
-			converter.convertEntity(fieldType, fieldValue, resource, property,
-					fieldValue);
+		try {
+			resource = createNewResource(individual);
+		} catch (IdentifierException e) {
+			logger.error("Object cannot not be bound. Identifier "
+					+ "could not be determined for {}", individual);
+			return;
 		}
 
-		for (Method method : Util.getAllMethods(type)) {
+		try {
 
-			if (method.isAnnotationPresent(RdfProperty.class)) {
-				String uri = method.getAnnotation(RdfProperty.class).value();
-				if (!uri.startsWith("http://")) {
-					uri = namespace + uri;
+			for (Field field : Util.getAllFields(type)) {
+
+				if (field.isAnnotationPresent(Transient.class)
+						|| field.isAnnotationPresent(RdfIdentifier.class)
+						|| field.isEnumConstant()
+						|| field.getDeclaringClass() == Enum.class)
+					continue;
+
+				field.setAccessible(true);
+				Object fieldValue = field.get(individual);
+				field.setAccessible(false);
+
+				String name = field.getName();
+				String uri = namespace + name;
+				if (field.isAnnotationPresent(RdfProperty.class)) {
+					uri = field.getAnnotation(RdfProperty.class).value();
+					if (!uri.startsWith("http://")) {
+						uri = namespace + uri;
+					}
 				}
 
-				method.setAccessible(true);
-				Object methodValue = method.invoke(individual);
-				method.setAccessible(false);
 				Property property = model.createProperty(uri);
-				converter.convertEntity(method.getReturnType(), methodValue,
-						resource, property, methodValue);
+				Class<?> fieldType = field.getType();
+				converter.convertEntity(fieldType, fieldValue, resource,
+						property, fieldValue);
 			}
 
+			for (Method method : Util.getAllMethods(type)) {
+
+				if (method.isAnnotationPresent(RdfProperty.class)) {
+					String uri = method.getAnnotation(RdfProperty.class)
+							.value();
+					if (!uri.startsWith("http://")
+							|| !uri.startsWith("http://")) {
+						uri = namespace + uri;
+					}
+
+					method.setAccessible(true);
+					Object methodValue = method.invoke(individual);
+					method.setAccessible(false);
+					Property property = model.createProperty(uri);
+					converter.convertEntity(method.getReturnType(),
+							methodValue, resource, property, methodValue);
+				}
+			}
+
+		} catch (IllegalArgumentException | IllegalAccessException
+				| InvocationTargetException e) {
+			logger.error(ACCESSIBILITY_ERROR, individual);
 		}
 
 	}
@@ -143,8 +176,11 @@ public class Binding {
 	 * @param object
 	 *            the object to be bound to the model.
 	 * @return the resource representing the object.
+	 * @throws IdentifierException
+	 *             if the identifier of the object could not be determined the
+	 *             resource cannot be created.
 	 */
-	public Resource createNewResource(Object object) throws Exception {
+	public Resource createNewResource(Object object) throws IdentifierException {
 
 		Class<?> type = object.getClass();
 		String typeName = type.getSimpleName();
@@ -175,33 +211,40 @@ public class Binding {
 	 * @param object
 	 *            the object for which the id is requested.
 	 * @return the id.
-	 * @throws IllegalAccessException
-	 * @throws IllegalArgumentException
+	 * @throws IdentifierException
+	 *             if the identifier of the object could not be determined.
 	 */
-	public Object getId(Object object) throws Exception {
+	public Object getId(Object object) throws IdentifierException {
 
 		Object id = null;
-		for (Field field : Util.getAllFields(object.getClass())) {
-			if (field.isAnnotationPresent(RdfIdentifier.class)) {
-				field.setAccessible(true);
-				id = field.get(object);
-				field.setAccessible(false);
-				return id;
+		try {
+			for (Field field : Util.getAllFields(object.getClass())) {
+				if (field.isAnnotationPresent(RdfIdentifier.class)) {
+					field.setAccessible(true);
+					id = field.get(object);
+					field.setAccessible(false);
+					return id;
+				}
 			}
-		}
 
-		for (Method method : Util.getAllMethods(object.getClass())) {
-			if (method.isAnnotationPresent(RdfIdentifier.class)) {
-				id = method.invoke(object);
-				return id;
+			for (Method method : Util.getAllMethods(object.getClass())) {
+				if (method.isAnnotationPresent(RdfIdentifier.class)) {
+					id = method.invoke(object);
+					return id;
+				}
 			}
+
+		} catch (IllegalArgumentException | IllegalAccessException
+				| InvocationTargetException e) {
+			logger.error(ACCESSIBILITY_ERROR, object);
 		}
 
 		if (object.getClass().isEnum()) {
 			return object.toString();
 		}
 
-		throw new Exception("No identifier definined in " + object.getClass());
+		throw new IdentifierException("No identifier definined in "
+				+ object.getClass());
 	}
 
 	/**

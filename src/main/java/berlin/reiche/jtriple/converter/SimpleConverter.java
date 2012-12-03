@@ -29,10 +29,10 @@ public class SimpleConverter extends AbstractConverter {
     /**
      * Default constructor that also adds all supported simple types to a set
      * for subsequent checks.
-     * 
-     * @param priority
-     *            the priority of this converter.
-     */
+	 * 
+	 * @param binding
+	 *            Binding object for recursive conversion invocations.
+	 */
     public SimpleConverter(Binding binding) {
         super(binding);
         simpleTypes = new HashSet<>();
@@ -48,8 +48,7 @@ public class SimpleConverter extends AbstractConverter {
      * Simply creates a property out of the field and creates the triple out of
      * the given parent resource, the property and the field value as literal.
      * 
-     * @see berlin.reiche.jtriple.converter.Converter#convertEntity(com.hp.hpl.jena.rdf.model.Resource,
-     *      java.lang.reflect.Field, java.lang.Object)
+     * @see berlin.reiche.jtriple.converter.Converter#convertEntity(Resource, Property, Object)
      */
     @Override
     public void convertEntity(Resource resource, Property predicate,
@@ -74,7 +73,7 @@ public class SimpleConverter extends AbstractConverter {
      * that every non-simple type will be structured under an empty node in RDF.
      * 
      * @return whether a given field is a simple type.
-     * @see berlin.reiche.jtriple.converter.Converter#canConvert(java.lang.Class)
+     * @see berlin.reiche.jtriple.converter.Converter#canConvert(Class, Object)
      */
     @Override
     public boolean canConvert(Class<?> type, Object object) {

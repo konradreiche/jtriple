@@ -35,7 +35,7 @@ public class CollectionConverter extends AbstractConverter {
 	 */
 	@Override
 	public void convertEntity(Resource subject, Property predicate,
-			Object object) throws Exception {
+			Object object) {
 
 		Collection<?> collection = (Collection<?>) object;
 		for (Object element : collection) {

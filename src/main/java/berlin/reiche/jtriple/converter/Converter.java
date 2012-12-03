@@ -28,7 +28,7 @@ public interface Converter {
 	 * @throws Exception
 	 */
 	void convertEntity(Class<?> type, Object instance, Resource subject,
-			Property predicate, Object object) throws Exception;
+			Property predicate, Object object);
 
 	/**
 	 * Converts the object to a RDF statement which is then immediately added to
@@ -45,8 +45,7 @@ public interface Converter {
 	 * 
 	 * @throws Exception
 	 */
-	void convertEntity(Resource subject, Property predicate, Object object)
-			throws Exception;
+	void convertEntity(Resource subject, Property predicate, Object object);
 
 	/**
 	 * In order to determine the appropriate converter this method is used to

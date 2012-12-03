@@ -28,8 +28,8 @@ public abstract class AbstractConverter implements Converter {
 	/**
 	 * Default constructor.
 	 * 
-	 * @param priority
-	 *            the priority for this converter.
+	 * @param binding
+	 *            Binding object for recursive conversion invocations.
 	 */
 	public AbstractConverter(Binding binding) {
 		this.binding = binding;
@@ -46,7 +46,7 @@ public abstract class AbstractConverter implements Converter {
 	 *      com.hp.hpl.jena.rdf.model.Property, java.lang.Object)
 	 */
 	public void convertEntity(Class<?> type, Object instance, Resource subject,
-			Property predicate, Object object) throws Exception {
+			Property predicate, Object object) {
 
 		if (canConvert(type, instance)) {
 			convertEntity(subject, predicate, object);

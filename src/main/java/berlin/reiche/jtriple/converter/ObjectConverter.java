@@ -1,7 +1,11 @@
 package berlin.reiche.jtriple.converter;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import berlin.reiche.jtriple.Binding;
 import berlin.reiche.jtriple.Util;
+import berlin.reiche.jtriple.rdf.IdentifierException;
 
 import com.hp.hpl.jena.rdf.model.Property;
 import com.hp.hpl.jena.rdf.model.Resource;
@@ -15,10 +19,16 @@ import com.hp.hpl.jena.rdf.model.Resource;
 public class ObjectConverter extends AbstractConverter {
 
 	/**
+	 * Logger object to facilitate logging in this class.
+	 */
+	private final Logger logger = LoggerFactory
+			.getLogger(ObjectConverter.class);
+
+	/**
 	 * Default constructor.
 	 * 
-	 * @param priority
-	 *            the priority of this converter.
+	 * @param binding
+	 *            Binding object for recursive conversion invocations.
 	 */
 	public ObjectConverter(Binding binding) {
 		super(binding);
@@ -33,12 +43,21 @@ public class ObjectConverter extends AbstractConverter {
 	 */
 	@Override
 	public void convertEntity(Resource subject, Property predicate,
-			Object object) throws Exception {
+			Object object) {
 
-		if (!Util.isEmpty(object)) {
-			Resource nextResource = binding.createNewResource(object);
-			binding.bind(object);
-			subject.addProperty(predicate, nextResource);
+		try {
+
+			if (!Util.isEmpty(object)) {
+				Resource nextResource = null;
+				nextResource = binding.createNewResource(object);
+				binding.bind(object);
+				subject.addProperty(predicate, nextResource);
+			}
+
+		} catch (IdentifierException e) {
+			logger.error("Subject cannot be converted. Identifier "
+					+ "could not be determined for {}", object);
+			return;
 		}
 	}
 
