@@ -4,9 +4,9 @@ import static berlin.reiche.jtriple.example.Branch.EPISTEMOLOGY;
 import static berlin.reiche.jtriple.example.Branch.METAPHYSISC;
 import static berlin.reiche.jtriple.example.Branch.PHILOSOPHY_OF_MIND;
 import static berlin.reiche.jtriple.example.Philosopher.NAMESPACE;
-import static junit.framework.Assert.assertFalse;
-import static junit.framework.Assert.assertTrue;
-import static junit.framework.Assert.fail;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -77,6 +77,7 @@ public class BindingTest {
 		locke.setInterests(branches);
 
 		binding.bind(locke);
+		model.write(System.out, "TURTLE");
 
 		Property label = model.getProperty(Label.uri);
 		Property nationality = model
