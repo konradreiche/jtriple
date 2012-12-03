@@ -114,7 +114,6 @@ public class Binding {
 			for (Field field : Util.getAllFields(type)) {
 
 				if (field.isAnnotationPresent(Transient.class)
-						|| field.isAnnotationPresent(RdfIdentifier.class)
 						|| field.isEnumConstant()
 						|| field.getDeclaringClass() == Enum.class)
 					continue;
