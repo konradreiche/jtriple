@@ -86,7 +86,7 @@ public class EnumConverter extends AbstractConverter {
 	 */
 	@Override
 	public boolean canConvert(Class<?> type, Object object) {
-		return type.isEnum();
+		return type.isEnum() && object.getClass().isEnum();
 	}
 
 }

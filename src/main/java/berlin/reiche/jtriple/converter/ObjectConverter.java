@@ -69,7 +69,7 @@ public class ObjectConverter extends AbstractConverter {
 	 */
 	@Override
 	public boolean canConvert(Class<?> type, Object object) {
-		return true;
+		return object != null;
 	}
 
 }

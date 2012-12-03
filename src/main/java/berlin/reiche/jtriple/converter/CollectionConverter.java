@@ -54,7 +54,8 @@ public class CollectionConverter extends AbstractConverter {
 	 */
 	@Override
 	public boolean canConvert(Class<?> type, Object object) {
-		return Collection.class.isAssignableFrom(type);
+		return Collection.class.isAssignableFrom(type)
+				&& object instanceof Collection;
 	}
 
 }
