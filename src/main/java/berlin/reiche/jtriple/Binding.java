@@ -4,6 +4,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
+import org.apache.commons.lang3.text.WordUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -187,6 +188,11 @@ public class Binding {
 		Class<?> type = object.getClass();
 		String typeName = type.getSimpleName();
 		String id = getId(object).toString();
+		id = id.replaceAll(" ", "_");
+		id = id.toLowerCase();
+		id = WordUtils.capitalize(id);
+		typeName = typeName.toLowerCase();
+		
 
 		String typeUri = namespace + typeName;
 		if (type.isAnnotationPresent(RdfType.class)) {

@@ -37,7 +37,7 @@ public class EnumConverter extends AbstractConverter {
 	}
 
 	/**
-	 * Converts the Enum entity by creating a new resource and linking it to the
+	 * Converts the enum entity by creating a new resource and linking it to the
 	 * subject resource with passed predicate.
 	 * 
 	 * The Enum constant is checked for the {@link SameAs} annotation. If it is
@@ -79,7 +79,7 @@ public class EnumConverter extends AbstractConverter {
 
 	/**
 	 * 
-	 * The object is convertible if it is an Enum type.
+	 * The object is convertible if it is an enum type.
 	 * 
 	 * @see berlin.reiche.jtriple.converter.Converter#canConvert(java.lang.Class,
 	 *      java.lang.Object)
