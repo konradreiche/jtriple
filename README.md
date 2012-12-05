@@ -4,51 +4,126 @@ JTriple is a Java tool which creates a RDF data model out of a Java object model
 
 ### Why another RDF binding for Java?
 
-The most popular tool for persisting Java objects to RDF is [JenaBean]. JTriple was developed, respectively Jenabean was not modified due to the following reasons:
+The most popular tool for persisting Java objects to RDF is [JenaBean]. JTriple was developed, respectively JenaBean was not modified due to the following reasons:
 
-* JenaBean aims for a persistence layer (object serialization). This fact is often expressed by missing con?guration, for instance a field cannot be declared as transient.
+* JenaBean aims for a persistence layer (object serialization). This fact is often expressed by missing confguration, for instance a field cannot be declared as transient.
 
 * Not the whole functionality of JenaBean is required. Additional data is serialized, for instance the serialization of the package names. Package names are vital for deserialization but for the pure data translation (one-way) it only interferes.
 
-* Data (RDF) and schema (OWL) should be translated into two separate RDF graphs. Jenabean creates only one graph.
+* Data (RDF) and schema (OWL) should be translated into two separate RDF graphs. JenaBean creates only one graph.
 
-## How does it work?
+## Getting Started
 
-The Java objects are instantiated and passed to JTriple which then examines the class and its different fields and methods with reflection. The run-time state of the Java objects is read and used to create a RDF graph by using [Jena API].
+JTriple can be deployed through Maven. Before, the following repository has to be added to your pom.xml
 
-```java
-Binding binding = new Binding(NAMESPACE);
-binding.bind(object);
+```xml
+<repository>
+     <id>berlin.reiche.jtriple</id>
+     <url>https://github.com/platzhirsch/jtriple/raw/master/repository/releases</url>
+</repository>
 ```
 
-The only required annotation is `@RdfIdentifier`. One field needs to be specified as identifier. Otherwise JTriple does not know how to construct the URI. The mapping between Java and RDF is as follows:
+Then it can be added with this dependency
 
-A statement in RDF consist of Subject, Predicate and Object
+```xml
+<dependency>
+     <groupId>berlin.reiche.jtriple</groupId>
+     <artifactId>jtriple</artifactId>
+     <version>0.1-RELEASE</version>
+     <scope>compile</scope>
+</dependency>
+```
 
-<table>
-  <tr>
-    <th>RDF</th><th>Java</th>
-  </tr>
-  <tr>
-    <td>Subject</td><td>Object</td>
-  </tr>
-  <tr>
-    <td>Predicate</td><td>Field</td>
-  </tr>
-  <tr>
-    <td>Object</td><td>Field value</td>
-  </tr>
-  <tr>
-    <td>URI</td><td>Annotated Field/Method</td>
-  </tr> 
-</table>
-
-
+Not using Maven? Head to the [download section] and get the JAR.
 
 
 ### Example
 
-Considering the following example, a class Philosopher
+Considering the following example. A class Philosopher
+
+```java
+public class Philosopher {
+
+	@RdfIdentifier
+	String name;
+
+	String nationality;
+	List<Branch> interests;
+}
+```
+
+with an enum type Branch
+
+```java
+public enum Branch {
+
+	EPISTEMOLOGY("Epistemology"),
+	MATHEMATIC("Mathematic"),
+	METAPHYSISC("Metaphysic"),
+	PHILOSOPHY_OF_MIND("Philosophy of Mind");
+	
+	String name;
+	
+	Branch(String name) {
+		this.name = name;
+	}
+}
+```
+The only requirement is to annotate one field or method of a class with `@RdfIdentifier`. Binding objects to RDF is as easy as follows
+
+
+```java
+// create data
+Philosopher locke = new Philosopher();
+locke.setName("John Locke");
+locke.setNationality("English");
+
+List<Branch> branches = new ArrayList<>();
+branches.add(METAPHYSISC);
+branches.add(EPISTEMOLOGY);
+branches.add(PHILOSOPHY_OF_MIND);
+locke.setInterests(branches);
+
+// bind object
+Binding binding = new Binding(DEFAULT_NAMESPACE);
+Model model = binding.getModel();
+model.setNsPrefix("philosophy", NAMESPACE);
+
+binding.bind(locke);
+
+// output RDF
+model.write(System.out, "TURTLE");
+```
+
+It is sufficient to produce this RDF
+
+```
+@prefix philosophy:  <http://konrad-reiche.com/philosophy/> .
+
+<http://konrad-reiche.com/philosophy/philosopher/John_locke>
+      a       <http://dbpedia.org/page/Philosopher> ;
+      philosophy:interests
+              <http://konrad-reiche.com/philosophy/branch/Metaphysisc> ,
+              <http://konrad-reiche.com/philosophy/branch/Philosophy_of_mind> ,
+              <http://konrad-reiche.com/philosophy/branch/Epistemology> ;
+      philosophy:name "John Locke"^^<http://www.w3.org/2001/XMLSchema#string> ;
+      philosophy:nationality
+              "English"^^<http://www.w3.org/2001/XMLSchema#string> .
+
+<http://konrad-reiche.com/philosophy/branch/Epistemology>
+      a       philosophy:branch ;
+      philosophy:name "Epistemology"^^<http://www.w3.org/2001/XMLSchema#string> .
+
+<http://konrad-reiche.com/philosophy/branch/Metaphysisc>
+      a       philosophy:branch ;
+      philosophy:name "Metaphysic"^^<http://www.w3.org/2001/XMLSchema#string> .
+
+<http://konrad-reiche.com/philosophy/branch/Philosophy_of_mind>
+      a       philosophy:branch ;
+      philosophy:name "Philosophy of Mind"^^<http://www.w3.org/2001/XMLSchema#string> .
+```
+
+Now, to get more sophisticated results, annotations help to provide neccessary information
 
 ```java
 @RdfType("http://dbpedia.org/page/Philosopher")
@@ -64,8 +139,6 @@ public class Philosopher {
 	List<Branch> interests;
 }
 ```
-
-with the enum type Branch
 
 ```java
 public enum Branch {
@@ -91,37 +164,22 @@ public enum Branch {
 }
 ```
 
-A default namespace is passed to the `Binding` object. Unless further specified this namespace plus the simple name of the class or field is used to construct the URI. With the following statements:
-
-```java
-Philosopher locke = new Philosopher();
-locke.setName("John Locke");
-locke.setNationality("English");
-
-List<Branch> branches = new ArrayList<>();
-branches.add(METAPHYSISC);
-branches.add(EPISTEMOLOGY);
-branches.add(PHILOSOPHY_OF_MIND);
-locke.setInterests(branches);
-
-Binding binding = new Binding(NAMESPACE);
-Model model = binding.getModel();
-model.setNsPrefix("philosophy", NAMESPACE);
-model.setNsPrefix("rdfs", "http://www.w3.org/2000/01/rdf-schema#");
-model.setNsPrefix("xfoaf", "http://www.foafrealm.org/xfoaf/0.1/");
-model.setNsPrefix("dbpedia", "http://dbpedia.org/resource/");
-
-binding.bind(locke);
-model.write(System.out, "TURTLE");
-```
-
-this RDF is produced:
+Leading to this RDF:
 
 ```
 @prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix xfoaf:   <http://www.foafrealm.org/xfoaf/0.1/> .
 @prefix philosophy:  <http://konrad-reiche.com/philosophy/> .
 @prefix dbpedia:  <http://dbpedia.org/resource/> .
+
+<http://konrad-reiche.com/philosophy/philosopher/John_locke>
+      a       <http://dbpedia.org/page/Philosopher> ;
+      rdfs:label "John Locke"^^<http://www.w3.org/2001/XMLSchema#string> ;
+      philosophy:interests
+              <http://konrad-reiche.com/philosophy/branch/Metaphysisc> ,
+              <http://konrad-reiche.com/philosophy/branch/Philosophy_of_mind> ,
+              <http://konrad-reiche.com/philosophy/branch/Epistemology> ;
+      xfoaf:nationality "English"^^<http://www.w3.org/2001/XMLSchema#string> .
 
 <http://konrad-reiche.com/philosophy/branch/Metaphysisc>
       a       philosophy:branch ;
@@ -134,17 +192,6 @@ this RDF is produced:
       rdfs:label "Philosophy of Mind"^^<http://www.w3.org/2001/XMLSchema#string> ;
       <http://www.w3.org/2002/07/owl#sameAs>
               dbpedia:Philosophy_of_mind .
-
-<http://konrad-reiche.com/philosophy/philosopher/John_locke>
-      a       <http://dbpedia.org/page/Philosopher> ;
-      rdfs:label "John Locke"^^<http://www.w3.org/2001/XMLSchema#string> ;
-      philosophy:NAMESPACE
-              "http://konrad-reiche.com/philosophy/"^^<http://www.w3.org/2001/XMLSchema#string> ;
-      philosophy:interests
-              <http://konrad-reiche.com/philosophy/branch/Metaphysisc> ,
-              <http://konrad-reiche.com/philosophy/branch/Philosophy_of_mind> ,
-              <http://konrad-reiche.com/philosophy/branch/Epistemology> ;
-      xfoaf:nationality "English"^^<http://www.w3.org/2001/XMLSchema#string> .
 
 <http://konrad-reiche.com/philosophy/branch/Epistemology>
       a       philosophy:branch ;
@@ -182,38 +229,14 @@ What annotations are there and how can they be used?
   </tr>
 </table>
 
-## Using it
-
-JTriple can used as a Maven dependency. You have to define this repository:
-
-```xml
-<repository>
-     <id>berlin.reiche.jtriple</id>
-     <url>https://github.com/platzhirsch/jtriple/raw/master/repository/snapshots</url>
-</repository>
-```
-
-Then it can be added as a dependency:
-
-```xml
-<dependency>
-     <groupId>berlin.reiche.jtriple</groupId>
-     <artifactId>jtriple</artifactId>
-     <version>0.1-RELEASE</version>
-     <scope>compile</scope>
-</dependency>
-```
-
-Apart from that you can head to the [download section] and get the JAR.
-
 ## Future Work
 
-Some ideas for the future development.
+Some ideas for the future development:
 
-* Implementing OWL binding
+* Implement OWL binding
 * Increase the configuration flexibility
 
-If you feel something is amiss, feel free to open an issue. The implementation is very lightweight and allows to change the functionality very quickly.
+If something is amiss, feel free to open an issue or make a pull request. The implementation is lightweight and allows to change the functionality very quickly.
 
 [JenaBean]: http://code.google.com/p/jenabean/
 [Jena API]: http://jena.apache.org/
