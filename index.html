@@ -36,48 +36,117 @@
 
 <h3>Why another RDF binding for Java?</h3>
 
-<p>The most popular tool for persisting Java objects to RDF is <a href="http://code.google.com/p/jenabean/">JenaBean</a>. JTriple was developed, respectively Jenabean was not modified due to the following reasons:</p>
+<p>The most popular tool for persisting Java objects to RDF is <a href="http://code.google.com/p/jenabean/">JenaBean</a>. JTriple was developed, respectively JenaBean was not modified due to the following reasons:</p>
 
 <ul>
-<li><p>JenaBean aims for a persistence layer (object serialization). This fact is often expressed by missing con?guration, for instance a field cannot be declared as transient.</p></li>
+<li><p>JenaBean aims for a persistence layer (object serialization). This fact is often expressed by missing confguration, for instance a field cannot be declared as transient.</p></li>
 <li><p>Not the whole functionality of JenaBean is required. Additional data is serialized, for instance the serialization of the package names. Package names are vital for deserialization but for the pure data translation (one-way) it only interferes.</p></li>
-<li><p>Data (RDF) and schema (OWL) should be translated into two separate RDF graphs. Jenabean creates only one graph.</p></li>
-</ul><h2>How does it work?</h2>
+<li><p>Data (RDF) and schema (OWL) should be translated into two separate RDF graphs. JenaBean creates only one graph.</p></li>
+</ul><h2>Getting Started</h2>
 
-<p>The Java objects are instantiated and passed to JTriple which then examines the class and its different fields and methods with reflection. The run-time state of the Java objects is read and used to create a RDF graph by using <a href="http://jena.apache.org/">Jena API</a>.</p>
+<p>JTriple can be deployed through Maven. Before, the following repository has to be added to your pom.xml</p>
 
-<div class="highlight"><pre><span class="n">Binding</span> <span class="n">binding</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Binding</span><span class="o">(</span><span class="n">NAMESPACE</span><span class="o">);</span>
-<span class="n">binding</span><span class="o">.</span><span class="na">bind</span><span class="o">(</span><span class="n">object</span><span class="o">);</span>
+<div class="highlight"><pre><span class="nt">&lt;repository&gt;</span>
+     <span class="nt">&lt;id&gt;</span>berlin.reiche.jtriple<span class="nt">&lt;/id&gt;</span>
+     <span class="nt">&lt;url&gt;</span>https://github.com/platzhirsch/jtriple/raw/master/repository/releases<span class="nt">&lt;/url&gt;</span>
+<span class="nt">&lt;/repository&gt;</span>
 </pre></div>
 
-<p>The only required annotation is <code>@RdfIdentifier</code>. One field needs to be specified as identifier. Otherwise JTriple does not know how to construct the URI. The mapping between Java and RDF is as follows:</p>
+<p>Then it can be added with this dependency</p>
 
-<p>A statement in RDF consist of Subject, Predicate and Object</p>
+<div class="highlight"><pre><span class="nt">&lt;dependency&gt;</span>
+     <span class="nt">&lt;groupId&gt;</span>berlin.reiche.jtriple<span class="nt">&lt;/groupId&gt;</span>
+     <span class="nt">&lt;artifactId&gt;</span>jtriple<span class="nt">&lt;/artifactId&gt;</span>
+     <span class="nt">&lt;version&gt;</span>0.1-RELEASE<span class="nt">&lt;/version&gt;</span>
+     <span class="nt">&lt;scope&gt;</span>compile<span class="nt">&lt;/scope&gt;</span>
+<span class="nt">&lt;/dependency&gt;</span>
+</pre></div>
 
-<table>
-<tr>
-<th>RDF</th>
-<th>Java</th>
-  </tr>
-<tr>
-<td>Subject</td>
-<td>Object</td>
-  </tr>
-<tr>
-<td>Predicate</td>
-<td>Field</td>
-  </tr>
-<tr>
-<td>Object</td>
-<td>Field value</td>
-  </tr>
-<tr>
-<td>URI</td>
-<td>Annotated Field/Method</td>
-  </tr>
-</table><h3>Example</h3>
+<p>Not using Maven? Head to the <a href="https://github.com/platzhirsch/jtriple/downloads">download section</a> and get the JAR.</p>
 
-<p>Considering the following example, a class Philosopher</p>
+<h3>Example</h3>
+
+<p>Considering the following example. A class Philosopher</p>
+
+<div class="highlight"><pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Philosopher</span> <span class="o">{</span>
+
+    <span class="nd">@RdfIdentifier</span>
+    <span class="n">String</span> <span class="n">name</span><span class="o">;</span>
+
+    <span class="n">String</span> <span class="n">nationality</span><span class="o">;</span>
+    <span class="n">List</span><span class="o">&lt;</span><span class="n">Branch</span><span class="o">&gt;</span> <span class="n">interests</span><span class="o">;</span>
+<span class="o">}</span>
+</pre></div>
+
+<p>with an enum type Branch</p>
+
+<div class="highlight"><pre><span class="kd">public</span> <span class="kd">enum</span> <span class="n">Branch</span> <span class="o">{</span>
+
+    <span class="n">EPISTEMOLOGY</span><span class="o">(</span><span class="s">"Epistemology"</span><span class="o">),</span>
+    <span class="n">MATHEMATIC</span><span class="o">(</span><span class="s">"Mathematic"</span><span class="o">),</span>
+    <span class="n">METAPHYSISC</span><span class="o">(</span><span class="s">"Metaphysic"</span><span class="o">),</span>
+    <span class="n">PHILOSOPHY_OF_MIND</span><span class="o">(</span><span class="s">"Philosophy of Mind"</span><span class="o">);</span>
+
+    <span class="n">String</span> <span class="n">name</span><span class="o">;</span>
+
+    <span class="n">Branch</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">name</span> <span class="o">=</span> <span class="n">name</span><span class="o">;</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</pre></div>
+
+<p>The only requirement is to annotate one field or method of a class with <code>@RdfIdentifier</code>. Binding objects to RDF is as easy as follows</p>
+
+<div class="highlight"><pre><span class="c1">// create data</span>
+<span class="n">Philosopher</span> <span class="n">locke</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Philosopher</span><span class="o">();</span>
+<span class="n">locke</span><span class="o">.</span><span class="na">setName</span><span class="o">(</span><span class="s">"John Locke"</span><span class="o">);</span>
+<span class="n">locke</span><span class="o">.</span><span class="na">setNationality</span><span class="o">(</span><span class="s">"English"</span><span class="o">);</span>
+
+<span class="n">List</span><span class="o">&lt;</span><span class="n">Branch</span><span class="o">&gt;</span> <span class="n">branches</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ArrayList</span><span class="o">&lt;&gt;();</span>
+<span class="n">branches</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">METAPHYSISC</span><span class="o">);</span>
+<span class="n">branches</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">EPISTEMOLOGY</span><span class="o">);</span>
+<span class="n">branches</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">PHILOSOPHY_OF_MIND</span><span class="o">);</span>
+<span class="n">locke</span><span class="o">.</span><span class="na">setInterests</span><span class="o">(</span><span class="n">branches</span><span class="o">);</span>
+
+<span class="c1">// bind object</span>
+<span class="n">Binding</span> <span class="n">binding</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Binding</span><span class="o">(</span><span class="n">DEFAULT_NAMESPACE</span><span class="o">);</span>
+<span class="n">Model</span> <span class="n">model</span> <span class="o">=</span> <span class="n">binding</span><span class="o">.</span><span class="na">getModel</span><span class="o">();</span>
+<span class="n">model</span><span class="o">.</span><span class="na">setNsPrefix</span><span class="o">(</span><span class="s">"philosophy"</span><span class="o">,</span> <span class="n">NAMESPACE</span><span class="o">);</span>
+
+<span class="n">binding</span><span class="o">.</span><span class="na">bind</span><span class="o">(</span><span class="n">locke</span><span class="o">);</span>
+
+<span class="c1">// output RDF</span>
+<span class="n">model</span><span class="o">.</span><span class="na">write</span><span class="o">(</span><span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">,</span> <span class="s">"TURTLE"</span><span class="o">);</span>
+</pre></div>
+
+<p>It is sufficient to produce this RDF</p>
+
+<pre><code>@prefix philosophy:  &lt;http://konrad-reiche.com/philosophy/&gt; .
+
+&lt;http://konrad-reiche.com/philosophy/philosopher/John_locke&gt;
+      a       &lt;http://dbpedia.org/page/Philosopher&gt; ;
+      philosophy:interests
+              &lt;http://konrad-reiche.com/philosophy/branch/Metaphysisc&gt; ,
+              &lt;http://konrad-reiche.com/philosophy/branch/Philosophy_of_mind&gt; ,
+              &lt;http://konrad-reiche.com/philosophy/branch/Epistemology&gt; ;
+      philosophy:name "John Locke"^^&lt;http://www.w3.org/2001/XMLSchema#string&gt; ;
+      philosophy:nationality
+              "English"^^&lt;http://www.w3.org/2001/XMLSchema#string&gt; .
+
+&lt;http://konrad-reiche.com/philosophy/branch/Epistemology&gt;
+      a       philosophy:branch ;
+      philosophy:name "Epistemology"^^&lt;http://www.w3.org/2001/XMLSchema#string&gt; .
+
+&lt;http://konrad-reiche.com/philosophy/branch/Metaphysisc&gt;
+      a       philosophy:branch ;
+      philosophy:name "Metaphysic"^^&lt;http://www.w3.org/2001/XMLSchema#string&gt; .
+
+&lt;http://konrad-reiche.com/philosophy/branch/Philosophy_of_mind&gt;
+      a       philosophy:branch ;
+      philosophy:name "Philosophy of Mind"^^&lt;http://www.w3.org/2001/XMLSchema#string&gt; .
+</code></pre>
+
+<p>Now, to get more sophisticated results, annotations help to provide neccessary information</p>
 
 <div class="highlight"><pre><span class="nd">@RdfType</span><span class="o">(</span><span class="s">"http://dbpedia.org/page/Philosopher"</span><span class="o">)</span>
 <span class="kd">public</span> <span class="kd">class</span> <span class="nc">Philosopher</span> <span class="o">{</span>
@@ -92,8 +161,6 @@
     <span class="n">List</span><span class="o">&lt;</span><span class="n">Branch</span><span class="o">&gt;</span> <span class="n">interests</span><span class="o">;</span>
 <span class="o">}</span>
 </pre></div>
-
-<p>with the enum type Branch</p>
 
 <div class="highlight"><pre><span class="kd">public</span> <span class="kd">enum</span> <span class="n">Branch</span> <span class="o">{</span>
 
@@ -118,35 +185,21 @@
 <span class="o">}</span>
 </pre></div>
 
-<p>A default namespace is passed to the <code>Binding</code> object. Unless further specified this namespace plus the simple name of the class or field is used to construct the URI. With the following statements:</p>
-
-<div class="highlight"><pre><span class="n">Philosopher</span> <span class="n">locke</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Philosopher</span><span class="o">();</span>
-<span class="n">locke</span><span class="o">.</span><span class="na">setName</span><span class="o">(</span><span class="s">"John Locke"</span><span class="o">);</span>
-<span class="n">locke</span><span class="o">.</span><span class="na">setNationality</span><span class="o">(</span><span class="s">"English"</span><span class="o">);</span>
-
-<span class="n">List</span><span class="o">&lt;</span><span class="n">Branch</span><span class="o">&gt;</span> <span class="n">branches</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ArrayList</span><span class="o">&lt;&gt;();</span>
-<span class="n">branches</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">METAPHYSISC</span><span class="o">);</span>
-<span class="n">branches</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">EPISTEMOLOGY</span><span class="o">);</span>
-<span class="n">branches</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">PHILOSOPHY_OF_MIND</span><span class="o">);</span>
-<span class="n">locke</span><span class="o">.</span><span class="na">setInterests</span><span class="o">(</span><span class="n">branches</span><span class="o">);</span>
-
-<span class="n">Binding</span> <span class="n">binding</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Binding</span><span class="o">(</span><span class="n">NAMESPACE</span><span class="o">);</span>
-<span class="n">Model</span> <span class="n">model</span> <span class="o">=</span> <span class="n">binding</span><span class="o">.</span><span class="na">getModel</span><span class="o">();</span>
-<span class="n">model</span><span class="o">.</span><span class="na">setNsPrefix</span><span class="o">(</span><span class="s">"philosophy"</span><span class="o">,</span> <span class="n">NAMESPACE</span><span class="o">);</span>
-<span class="n">model</span><span class="o">.</span><span class="na">setNsPrefix</span><span class="o">(</span><span class="s">"rdfs"</span><span class="o">,</span> <span class="s">"http://www.w3.org/2000/01/rdf-schema#"</span><span class="o">);</span>
-<span class="n">model</span><span class="o">.</span><span class="na">setNsPrefix</span><span class="o">(</span><span class="s">"xfoaf"</span><span class="o">,</span> <span class="s">"http://www.foafrealm.org/xfoaf/0.1/"</span><span class="o">);</span>
-<span class="n">model</span><span class="o">.</span><span class="na">setNsPrefix</span><span class="o">(</span><span class="s">"dbpedia"</span><span class="o">,</span> <span class="s">"http://dbpedia.org/resource/"</span><span class="o">);</span>
-
-<span class="n">binding</span><span class="o">.</span><span class="na">bind</span><span class="o">(</span><span class="n">locke</span><span class="o">);</span>
-<span class="n">model</span><span class="o">.</span><span class="na">write</span><span class="o">(</span><span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">,</span> <span class="s">"TURTLE"</span><span class="o">);</span>
-</pre></div>
-
-<p>this RDF is produced:</p>
+<p>Leading to this RDF:</p>
 
 <pre><code>@prefix rdfs:    &lt;http://www.w3.org/2000/01/rdf-schema#&gt; .
 @prefix xfoaf:   &lt;http://www.foafrealm.org/xfoaf/0.1/&gt; .
 @prefix philosophy:  &lt;http://konrad-reiche.com/philosophy/&gt; .
 @prefix dbpedia:  &lt;http://dbpedia.org/resource/&gt; .
+
+&lt;http://konrad-reiche.com/philosophy/philosopher/John_locke&gt;
+      a       &lt;http://dbpedia.org/page/Philosopher&gt; ;
+      rdfs:label "John Locke"^^&lt;http://www.w3.org/2001/XMLSchema#string&gt; ;
+      philosophy:interests
+              &lt;http://konrad-reiche.com/philosophy/branch/Metaphysisc&gt; ,
+              &lt;http://konrad-reiche.com/philosophy/branch/Philosophy_of_mind&gt; ,
+              &lt;http://konrad-reiche.com/philosophy/branch/Epistemology&gt; ;
+      xfoaf:nationality "English"^^&lt;http://www.w3.org/2001/XMLSchema#string&gt; .
 
 &lt;http://konrad-reiche.com/philosophy/branch/Metaphysisc&gt;
       a       philosophy:branch ;
@@ -159,17 +212,6 @@
       rdfs:label "Philosophy of Mind"^^&lt;http://www.w3.org/2001/XMLSchema#string&gt; ;
       &lt;http://www.w3.org/2002/07/owl#sameAs&gt;
               dbpedia:Philosophy_of_mind .
-
-&lt;http://konrad-reiche.com/philosophy/philosopher/John_locke&gt;
-      a       &lt;http://dbpedia.org/page/Philosopher&gt; ;
-      rdfs:label "John Locke"^^&lt;http://www.w3.org/2001/XMLSchema#string&gt; ;
-      philosophy:NAMESPACE
-              "http://konrad-reiche.com/philosophy/"^^&lt;http://www.w3.org/2001/XMLSchema#string&gt; ;
-      philosophy:interests
-              &lt;http://konrad-reiche.com/philosophy/branch/Metaphysisc&gt; ,
-              &lt;http://konrad-reiche.com/philosophy/branch/Philosophy_of_mind&gt; ,
-              &lt;http://konrad-reiche.com/philosophy/branch/Epistemology&gt; ;
-      xfoaf:nationality "English"^^&lt;http://www.w3.org/2001/XMLSchema#string&gt; .
 
 &lt;http://konrad-reiche.com/philosophy/branch/Epistemology&gt;
       a       philosophy:branch ;
@@ -219,36 +261,14 @@
 <td>Fields, Methods</td>
 <td>Value to define a rdfs:label property on the resource</td>
   </tr>
-</table><h2>Using it</h2>
+</table><h2>Future Work</h2>
 
-<p>JTriple can used as a Maven dependency. You have to define this repository:</p>
-
-<div class="highlight"><pre><span class="nt">&lt;repository&gt;</span>
-     <span class="nt">&lt;id&gt;</span>berlin.reiche.jtriple<span class="nt">&lt;/id&gt;</span>
-     <span class="nt">&lt;url&gt;</span>https://github.com/platzhirsch/jtriple/raw/master/repository/snapshots<span class="nt">&lt;/url&gt;</span>
-<span class="nt">&lt;/repository&gt;</span>
-</pre></div>
-
-<p>Then it can be added as a dependency:</p>
-
-<div class="highlight"><pre><span class="nt">&lt;dependency&gt;</span>
-     <span class="nt">&lt;groupId&gt;</span>berlin.reiche.jtriple<span class="nt">&lt;/groupId&gt;</span>
-     <span class="nt">&lt;artifactId&gt;</span>jtriple<span class="nt">&lt;/artifactId&gt;</span>
-     <span class="nt">&lt;version&gt;</span>0.1-RELEASE<span class="nt">&lt;/version&gt;</span>
-     <span class="nt">&lt;scope&gt;</span>compile<span class="nt">&lt;/scope&gt;</span>
-<span class="nt">&lt;/dependency&gt;</span>
-</pre></div>
-
-<p>Apart from that you can head to the <a href="https://github.com/platzhirsch/jtriple/downloads">download section</a> and get the JAR.</p>
-
-<h2>Future Work</h2>
-
-<p>Some ideas for the future development.</p>
+<p>Some ideas for the future development:</p>
 
 <ul>
-<li>Implementing OWL binding</li>
+<li>Implement OWL binding</li>
 <li>Increase the configuration flexibility</li>
-</ul><p>If you feel something is amiss, feel free to open an issue. The implementation is very lightweight and allows to change the functionality very quickly.</p>
+</ul><p>If something is amiss, feel free to open an issue or make a pull request. The implementation is lightweight and allows to change the functionality very quickly.</p>
       </section>
       <footer>
         <p><small>Hosted on <a href="https://pages.github.com">GitHub Pages</a> using the Dinky theme</small></p>
