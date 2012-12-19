@@ -4,7 +4,7 @@
 
 	<groupId>berlin.reiche.jtriple</groupId>
 	<artifactId>jtriple</artifactId>
-	<version>0.1-RELEASE</version>
+	<version>0.1</version>
 	<packaging>jar</packaging>
 
 	<name>jtriple</name>

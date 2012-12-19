@@ -34,8 +34,7 @@ Then it can be added with this dependency
 </dependency>
 ```
 
-Not using Maven? Head to the [download section] and get the JAR.
-
+Not using Maven? You can also get the [JAR] directly.
 
 ### Example
 
@@ -240,4 +239,4 @@ If something is amiss, feel free to open an issue or make a pull request. The im
 
 [JenaBean]: http://code.google.com/p/jenabean/
 [Jena API]: http://jena.apache.org/
-[download section]: https://github.com/platzhirsch/jtriple/downloads
+[JAR]: https://github.com/platzhirsch/jtriple/raw/master/repository/releases/berlin/reiche/jtriple/jtriple/0.1/jtriple-0.1.jar
